@@ -8,11 +8,12 @@ String MACHINE = "1";
 
 WiFiUDP Udp;
 
-const char* ssid = "cibovita";
-const char* password = "cibovita2016";
+//Provide the informations on the following 4 lines below.
+const char* ssid = "SSID";
+const char* password = "PASSWORD";
 
-const char* udpAddress = "10.12.0.15";
-unsigned int udpPort = 5055;
+const char* udpAddress = "IP ADDRESS";
+unsigned int udpPort = PORT;
 
 #define SENSOR_PIN 23
 
