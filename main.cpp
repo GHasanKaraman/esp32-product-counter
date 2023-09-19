@@ -68,10 +68,6 @@ void initWiFi() {
   WiFi.onEvent(Get_IP_Address, ARDUINO_EVENT_WIFI_STA_GOT_IP);
   WiFi.onEvent(Wifi_disconnected, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
 
-  if (!WiFi.config(local_IP, gateway, subnet, dns)) {
-    Serial.println("STA Failed to configure");
-  }
-
   WiFi.begin(ssid, password);
 
   Serial.println("Waiting for WIFI network ...");
