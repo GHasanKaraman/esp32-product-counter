@@ -9,7 +9,8 @@ const char* password = "cibovita2016";
 const char* udpServerIP = "10.12.0.15";
 const int udpServerPort = 5055;
 
-const int laserPin = 25; // GPIO pin connected to the laser sensor
+const int laserPin = 35; // GPIO pin connected to the laser sensor 
+//input 1 pun the most right
 
 int productCount = 0;
 int lastSentCount = 0;
@@ -19,17 +20,18 @@ int sentUDP = false;
 WiFiUDP udp;
 AsyncUDP asyncUdp;
 
-unsigned long startTime;
-unsigned long timer;
+unsigned long startTime = 0;
+unsigned long lastSentTime = 0;
+unsigned long now = 0;
 
 void Wifi_connected(WiFiEvent_t event, WiFiEventInfo_t info) {
-  Serial.println("ESP32 WIFI connected to Access Point");
+  Serial.println("CiboController WIFI connected to Access Point");
 }
 
 void Get_IP_Address(WiFiEvent_t event, WiFiEventInfo_t info) {
     Serial.println("WIFI Connected!");
     startTime = millis();
-    sendProductCount(productCount);
+    sendProductCount(productCount, now);
     Serial.print("Local IP: ");
     Serial.println(WiFi.localIP());
     /*Serial.print("Subnet Mask: " );
@@ -61,7 +63,7 @@ void connectToWiFi() {
   WiFi.begin(ssid, password);
 }
 
-void sendProductCount(int count) {
+void sendProductCount(int count, unsigned long time) {
   if(WiFi.status() == WL_CONNECTED){
     if (udp.beginPacket(udpServerIP, udpServerPort)) {
       String data = MACHINE + " " + String(count)+".";
@@ -70,6 +72,7 @@ void sendProductCount(int count) {
       udp.endPacket();
       Serial.println("Sent product count to server");
       lastSentCount = productCount;
+      lastSentTime = time;
     } else {
       Serial.println("Failed to send product count");
     }
@@ -95,26 +98,24 @@ void loop() {
       Serial.println("Product Count: " + String(productCount));
     }
  
-    timer = millis()-startTime;
-    if(timer >= 5000){
-      if(lastSentCount != productCount){
-        sendProductCount(productCount);
-      }
-      startTime = millis();
-      timer = 0;
+    now = millis();
+
+    if(lastSentCount != productCount && now - lastSentTime >= 5000){
+      sendProductCount(productCount, now);
     }
+
+    if(now - lastSentTime >= 1000*60*5){
+      sendProductCount(-1, now);
+    }
+
+    startTime = now;
 
     if (asyncUdp.listen(1234)) {
       asyncUdp.onPacket([](AsyncUDPPacket packet) {
       String myString = (const char*)packet.data();
       if(myString == "rst"){
-        if(productCount == 0){
-          packet.printf("err");
-        }
-        else{
           productCount = 0;
           packet.printf("done");
-        }
       }
     });
   }
